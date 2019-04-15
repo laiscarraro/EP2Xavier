@@ -1,0 +1,172 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdbool.h>
+#define N 12
+
+//Laís Carraro Leme Cavalheiro - nroUSP = 10687638
+
+typedef struct s {
+	int chave;
+	struct s* prox;
+} NO;
+
+typedef struct {
+	NO* ADJ[N+1];
+	int cor[N+1];
+	int pai[N+1];
+	int descoberta[N+1];
+	int final[N+1];
+	int minor[N+1];
+	int st[N+1];
+	char sinal[N+1];
+	int tempo;
+} GRAFO;
+
+typedef struct s {
+	int nome;
+	struct s* prox;
+	struct s* ant;
+} NO1;
+
+void adicionarAdj(GRAFO* g, int v1, int v2) {
+	NO* primeiro = g->ADJ[v1];
+	while(primeiro && primeiro->prox) primeiro = primeiro->prox;
+	NO* novo = (NO*) malloc(sizeof(NO));
+	novo->prox = NULL;
+	novo->chave = v2;
+	if(primeiro) primeiro->prox = novo;
+	else g->ADJ[v1] = novo;
+}
+
+void DFS1(GRAFO* g, int y) {
+	NO* adj = g->ADJ[y];
+	while(adj) {
+		if(g->cor[adj->chave] == 0) {
+			g->cor[adj->chave] = 1;
+			g->tempo = g->tempo + 1;
+			g->descoberta[adj->chave] = g->tempo;
+			g->minor[adj->chave] = g->tempo;
+			g->pai[adj->chave] = y;
+			DFS1(g, adj->chave);
+		}
+		adj = adj->prox;
+	}
+}
+
+void DFS2(GRAFO* g, int z) {
+	NO* adj = g->ADJ[z];
+	while(adj) {
+		if(g->pai[adj->chave] == z) {
+			DFS2(g, adj->chave);
+		}
+		adj = adj->prox;
+	}
+	adj = g->ADJ[z];
+	while(adj) {
+		if((adj->chave != g->pai[z]) && (g->minor[adj->chave] < g->minor[z])) {
+			g->minor[z] = g->minor[adj->chave];
+		}
+		adj = adj->prox;
+	}
+}
+
+bool DFST(GRAFO* g) {
+	bool biconexo = false;
+	for(int i = 1; i < N+1; i++) {
+		g->pai[i] = 0;
+		g->cor[i] = 0;
+		g->minor[i] = N;
+		g->descoberta[i] = 0;
+		g->st[i] = 0;
+	}
+	g->tempo = 0;
+	g->cor[1] = 1;
+	g->tempo = g->tempo + 1;
+	g->descoberta[1] = g->tempo;
+	g->minor[1] = g->tempo;
+	DFS1(g, 1);
+	if(g->tempo == N) {
+		g->minor[1] = g->descoberta[1];
+		DFS2(g, 1);
+	}
+	biconexo = true;
+	for(int i = 1; i < N+1; i++) {
+		printf("o vertice %i tem descoberta %i e minor %i\n", i, g->descoberta[i], g->minor[i]);
+		if((i != 1) && (g->descoberta[i] == g->minor[i])) {
+			printf("A aresta que liga os vértices %i e %i é uma aresta crítica.\n", g->pai[i], i);
+			biconexo = false;
+		}
+	}
+	return biconexo;
+}
+
+void insereAntes(NO1* inicio, int v) {
+
+}
+
+void insereDepois(NO1* inicio, int v) {
+
+}
+
+bool stNum(GRAFO* g, NO1* inicio) {
+	if(!ehBiconexo(g))
+		return false;
+	for(int i = 1; i <= N; i++) {
+		if(g->descoberta[i] == 1) g->sinal[i] = '-';
+		if(g->sinal[g->minor[i]] == '-') {
+			insereAntes(inicio, i);
+			g->sinal[g->pai[i]] = '+';
+		} else if(g->sinal[g->minor[i]] == '+') {
+			insereDepois(inicio, i);
+			g->sinal[g->pai[i]] = '-';
+		}
+	}
+	int i = 1;
+	for(int j = 1; j <= N; j++) {
+		NO1* p = inicio;
+		while(p) {
+			if(p->nome == g->descoberta[j]) g->st[j] = i;
+			i = i + 1;
+			p = p->prox;
+		}
+	}
+	return true;
+}
+
+int main() {
+	GRAFO* g = (GRAFO*) malloc(sizeof(GRAFO));
+	adicionarAdj(g, 1, 2);
+	adicionarAdj(g, 1, 3);
+	adicionarAdj(g, 2, 1);
+	adicionarAdj(g, 2, 4);
+	adicionarAdj(g, 2, 5);
+	adicionarAdj(g, 3, 1);
+	adicionarAdj(g, 3, 5);
+	adicionarAdj(g, 4, 2);
+	adicionarAdj(g, 4, 6);
+	adicionarAdj(g, 4, 7);
+	adicionarAdj(g, 5, 2);
+	adicionarAdj(g, 5, 3);
+	adicionarAdj(g, 5, 6);
+	adicionarAdj(g, 6, 4);
+	adicionarAdj(g, 6, 5);
+	adicionarAdj(g, 7, 4);
+	adicionarAdj(g, 7, 8);
+	adicionarAdj(g, 7, 9);
+	adicionarAdj(g, 7, 12);
+	adicionarAdj(g, 8, 7);
+	adicionarAdj(g, 8, 9);
+	adicionarAdj(g, 9, 7);
+	adicionarAdj(g, 9, 8);
+	adicionarAdj(g, 9, 10);
+	adicionarAdj(g, 9, 11);
+	adicionarAdj(g, 10, 9);
+	adicionarAdj(g, 10, 11);
+	adicionarAdj(g, 10, 12);
+	adicionarAdj(g, 11, 9);
+	adicionarAdj(g, 11, 10);
+	adicionarAdj(g, 12, 7);
+	adicionarAdj(g, 12, 10);
+	if(DFST(g)) printf("O grafo é biconexo.\n");
+	else printf("O grafo não é biconexo.\n");
+}
