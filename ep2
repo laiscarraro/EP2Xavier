@@ -91,9 +91,7 @@ bool DFST(GRAFO* g) {
 	}
 	biconexo = true;
 	for(int i = 1; i < N+1; i++) {
-		printf("o vertice %i tem descoberta %i, minor %i e pai %i\n", i, g->descoberta[i], g->minor[i], g->pai[i]);
 		if((i != 1) && (g->descoberta[i] == g->minor[i])) {
-			printf("A aresta que liga os vértices %i e %i é uma aresta crítica.\n", g->pai[i], i);
 			biconexo = false;
 		}
 	}
@@ -169,7 +167,7 @@ NO1* stNum(GRAFO* g) {
 		while(p) {
 			if(p->nome == g->descoberta[j]) {
 				g->st[j] = i;
-				printf("O vertice %i tem sinal %c e st numeracao %i\n", p->nome, g->sinal[j], i);
+				printf("O vertice %i tem st numeracao %i\n", p->nome, i);
 			}
 			i = i + 1;
 			p = p->prox;
