@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdbool.h>
-#define N 12
+#define N 6
 
 //Laís Carraro Leme Cavalheiro - nroUSP = 10687638
 
@@ -22,10 +22,10 @@ typedef struct {
 	int tempo;
 } GRAFO;
 
-typedef struct s {
+typedef struct k {
+	struct k* prox;
+	struct k* ant;
 	int nome;
-	struct s* prox;
-	struct s* ant;
 } NO1;
 
 void adicionarAdj(GRAFO* g, int v1, int v2) {
@@ -91,7 +91,7 @@ bool DFST(GRAFO* g) {
 	}
 	biconexo = true;
 	for(int i = 1; i < N+1; i++) {
-		printf("o vertice %i tem descoberta %i e minor %i\n", i, g->descoberta[i], g->minor[i]);
+		printf("o vertice %i tem descoberta %i, minor %i e pai %i\n", i, g->descoberta[i], g->minor[i], g->pai[i]);
 		if((i != 1) && (g->descoberta[i] == g->minor[i])) {
 			printf("A aresta que liga os vértices %i e %i é uma aresta crítica.\n", g->pai[i], i);
 			biconexo = false;
@@ -100,73 +100,104 @@ bool DFST(GRAFO* g) {
 	return biconexo;
 }
 
-void insereAntes(NO1* inicio, int v) {
-
+NO1* insereAntes(NO1* inicio, int filho, int pai) {
+	if(!inicio) {
+		inicio = (NO1*) malloc(sizeof(NO1));
+		inicio->nome = filho;
+		inicio->prox = NULL;
+		inicio->ant = NULL;
+		return inicio;
+	}
+	NO1* p = inicio;
+	while(p) {
+		if(p->nome == pai) {
+			NO1* novo = (NO1*) malloc(sizeof(NO1));
+			novo->nome = filho;
+			novo->ant = p->ant;
+			if(p->ant) p->ant->prox = novo;
+			p->ant = novo;
+			novo->prox = p;
+			if(p == inicio) inicio = novo;
+		}
+		p = p->prox;
+	}
+	return inicio;
 }
 
-void insereDepois(NO1* inicio, int v) {
-
+NO1* insereDepois(NO1* inicio, int filho, int pai) {
+	if(!inicio) {
+		inicio = (NO1*) malloc(sizeof(NO1));
+		inicio->nome = filho;
+		inicio->prox = NULL;
+		inicio->ant = NULL;
+		return inicio;
+	}
+	NO1* p = inicio;
+	while(p) {
+		if(p->nome == pai) {
+			NO1* novo = (NO1*) malloc(sizeof(NO1));
+			novo->nome = filho;
+			novo->prox = p->prox;
+			if(p->prox) p->prox->ant = novo;
+			novo->ant = p;
+			p->prox = novo;
+		}
+		p = p->prox;
+	}
+	return inicio;
 }
 
-bool stNum(GRAFO* g, NO1* inicio) {
-	if(!ehBiconexo(g))
-		return false;
+NO1* stNum(GRAFO* g) {
+	NO1* inicio = NULL;
+	if(!DFST(g)) {
+		printf("O grafo nao eh biconexo e, portanto, nao tem uma st numeracao.\n");
+		return inicio;
+	}
 	for(int i = 1; i <= N; i++) {
 		if(g->descoberta[i] == 1) g->sinal[i] = '-';
-		if(g->sinal[g->minor[i]] == '-') {
-			insereAntes(inicio, i);
-			g->sinal[g->pai[i]] = '+';
-		} else if(g->sinal[g->minor[i]] == '+') {
-			insereDepois(inicio, i);
+		if(g->sinal[g->minor[i]] == '+') {
+			inicio = insereAntes(inicio, i, g->pai[i]);
 			g->sinal[g->pai[i]] = '-';
+		} else if(g->sinal[g->minor[i]] == '-') {
+			inicio = insereDepois(inicio, i, g->pai[i]);
+			g->sinal[g->pai[i]] = '+';
 		}
 	}
 	int i = 1;
 	for(int j = 1; j <= N; j++) {
 		NO1* p = inicio;
 		while(p) {
-			if(p->nome == g->descoberta[j]) g->st[j] = i;
+			if(p->nome == g->descoberta[j]) {
+				g->st[j] = i;
+				printf("O vertice %i tem sinal %c e st numeracao %i\n", p->nome, g->sinal[j], i);
+			}
 			i = i + 1;
 			p = p->prox;
 		}
+		i = 1;
 	}
-	return true;
+	return inicio;
 }
 
 int main() {
 	GRAFO* g = (GRAFO*) malloc(sizeof(GRAFO));
 	adicionarAdj(g, 1, 2);
-	adicionarAdj(g, 1, 3);
+	adicionarAdj(g, 1, 6);
 	adicionarAdj(g, 2, 1);
-	adicionarAdj(g, 2, 4);
-	adicionarAdj(g, 2, 5);
-	adicionarAdj(g, 3, 1);
+	adicionarAdj(g, 2, 3);
+	adicionarAdj(g, 2, 6);
+	adicionarAdj(g, 3, 2);
+	adicionarAdj(g, 3, 4);
 	adicionarAdj(g, 3, 5);
-	adicionarAdj(g, 4, 2);
-	adicionarAdj(g, 4, 6);
-	adicionarAdj(g, 4, 7);
-	adicionarAdj(g, 5, 2);
+	adicionarAdj(g, 3, 6);
+	adicionarAdj(g, 4, 3);
+	adicionarAdj(g, 4, 5);
 	adicionarAdj(g, 5, 3);
+	adicionarAdj(g, 5, 4);
 	adicionarAdj(g, 5, 6);
-	adicionarAdj(g, 6, 4);
+	adicionarAdj(g, 6, 1);
+	adicionarAdj(g, 6, 2);
+	adicionarAdj(g, 6, 3);
 	adicionarAdj(g, 6, 5);
-	adicionarAdj(g, 7, 4);
-	adicionarAdj(g, 7, 8);
-	adicionarAdj(g, 7, 9);
-	adicionarAdj(g, 7, 12);
-	adicionarAdj(g, 8, 7);
-	adicionarAdj(g, 8, 9);
-	adicionarAdj(g, 9, 7);
-	adicionarAdj(g, 9, 8);
-	adicionarAdj(g, 9, 10);
-	adicionarAdj(g, 9, 11);
-	adicionarAdj(g, 10, 9);
-	adicionarAdj(g, 10, 11);
-	adicionarAdj(g, 10, 12);
-	adicionarAdj(g, 11, 9);
-	adicionarAdj(g, 11, 10);
-	adicionarAdj(g, 12, 7);
-	adicionarAdj(g, 12, 10);
-	if(DFST(g)) printf("O grafo é biconexo.\n");
-	else printf("O grafo não é biconexo.\n");
+	NO1* p = stNum(g);
 }
